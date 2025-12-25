@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  active
+  suspended
+  trial
+}
+
+enum SubscriptionPlan {
+  free
+  pro
+  enterprise
+}
+
+enum UserRole {
+  super_admin
+  tenant_admin
+  user
+}
+
+enum ProjectStatus {
+  active
+  archived
+  completed
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  completed
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+model Tenant {
+  id                String           @id @default(uuid())
+  name              String
+  subdomain         String           @unique
+  status            TenantStatus     @default(active)
+  subscriptionPlan  SubscriptionPlan @default(free)
+  maxUsers          Int              @default(5)
+  maxProjects       Int              @default(3)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  users             User[]
+  projects          Project[]
+  tasks             Task[]
+  auditLogs         AuditLog[]
+}
+
+model User {
+  id          String    @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?   @relation(fields: [tenantId], references: [id])
+  email       String
+  passwordHash String   @map("password_hash")
+  fullName    String
+  role        UserRole  @default(user)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdProjects Project[] @relation("ProjectCreator")
+  assignedTasks   Task[]    @relation("TaskAssignee")
+  auditLogs       AuditLog[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      ProjectStatus @default(active)
+  createdById String
+  createdBy   User          @relation("ProjectCreator", fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tasks       Task[]
+
+  @@index([tenantId])
+}
+
+model Task {
+  id           String       @id @default(uuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  status       TaskStatus    @default(todo)
+  priority     TaskPriority  @default(medium)
+  assignedToId String?
+  assignedTo   User?         @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  dueDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([tenantId, projectId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String?
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String?
+  entityId   String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
+}

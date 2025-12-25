@@ -1,0 +1,28 @@
+{
+  "project": "multi-tenant-saas",
+  "testCredentials": [
+    {
+      "role": "super_admin",
+      "email": "superadmin@system.com",
+      "password": "Admin@123"
+    },
+    {
+      "role": "tenant_admin",
+      "tenantSubdomain": "demo",
+      "email": "admin@demo.com",
+      "password": "Demo@123"
+    },
+    {
+      "role": "user",
+      "tenantSubdomain": "demo",
+      "email": "user1@demo.com",
+      "password": "User@123"
+    }
+  ],
+  "docker": {
+    "composeFile": "docker-compose.yml",
+    "services": ["database", "backend", "frontend"],
+    "healthcheck": "http://localhost:5000/api/health",
+    "frontendUrl": "http://localhost:3000"
+  }
+}
