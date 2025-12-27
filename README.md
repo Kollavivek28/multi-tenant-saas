@@ -4,7 +4,7 @@ Multi-Tenant SaaS Control Center is a reference implementation of a tenant-aware
 
 ## Features
 - Tenant onboarding flow with automated subscription limits, audit logging, and seeded demo data.
-- JWT authentication + role-based authorization (`super_admin`, `tenant_admin`, `user`).
+- JWT authentication + role-based authorization (`super_admin`, `tenant_admin`, `user`)
 - Dashboard with KPI tiles, project summaries, and task completion charting.
 - Project CRUD with in-app task creation, filtering, and progress tracking.
 - Task board with cross-project view, inline status changes, and assignment controls.
